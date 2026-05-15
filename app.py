@@ -31,124 +31,163 @@ if "opstelling" not in data:
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
 
-/* ── Kleuren ── */
+/* WCAG AA: normale tekst ≥4.5:1, grote tekst ≥3:1 op wit */
 :root {
-    --oranje:      #FF6B00;
-    --oranje-licht:#FF8C33;
-    --oranje-dim:  #FF6B0022;
-    --zwart:       #0E0E0E;
-    --zwart-mid:   #1A1A1A;
-    --zwart-licht: #242424;
-    --zwart-rand:  #333333;
-    --wit:         #FFFFFF;
-    --grijs:       #999999;
+    --bg:            #FFFFFF;
+    --bg-subtle:     #F4F6F9;
+    --bg-muted:      #E8EDF3;
+    --border:        #B8C4D0;
+    --border-strong: #6B7C8F;
+
+    --text:          #1A2332;
+    --text-secondary:#3D4F63;
+    --text-muted:    #4A5C6E;
+
+    --primary:       #0B5CAD;
+    --primary-hover: #094985;
+    --primary-light: #E3EEF8;
+    --primary-text:  #FFFFFF;
+
+    --success:       #1B6B38;
+    --accent-heading:#0A4A8C;
+    --focus-ring:    #0B5CAD;
 }
 
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
-    background-color: var(--zwart) !important;
-    color: var(--wit);
+    background-color: var(--bg) !important;
+    color: var(--text);
 }
 
-/* Streamlit achtergrond */
-.stApp { background-color: var(--zwart) !important; }
+.stApp { background-color: var(--bg) !important; }
 section[data-testid="stSidebar"] { display: none; }
 
 h1 {
     font-family: 'Bebas Neue', sans-serif;
     font-size: clamp(1.8rem, 6vw, 3rem);
     letter-spacing: 3px;
-    color: var(--oranje);
+    color: var(--accent-heading);
     margin-bottom: 0;
-    text-shadow: 0 2px 12px rgba(255,107,0,0.3);
 }
 h2, h3 {
     font-family: 'Bebas Neue', sans-serif;
     letter-spacing: 1px;
-    color: var(--wit);
+    color: var(--text);
     font-size: clamp(1.1rem, 4vw, 1.6rem);
 }
 
-/* ── Stat cards ── */
+/* Streamlit knoppen */
+.stButton > button {
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    border-width: 2px !important;
+    min-height: 2.75rem;
+}
+.stButton > button[kind="primary"],
+.stButton > button[data-testid="baseButton-primary"] {
+    background-color: var(--primary) !important;
+    color: var(--primary-text) !important;
+    border-color: var(--primary) !important;
+}
+.stButton > button[kind="primary"]:hover,
+.stButton > button[data-testid="baseButton-primary"]:hover {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+}
+.stButton > button[kind="secondary"],
+.stButton > button[data-testid="baseButton-secondary"] {
+    background-color: var(--bg-subtle) !important;
+    color: var(--text) !important;
+    border-color: var(--border-strong) !important;
+}
+.stButton > button:focus-visible {
+    outline: 3px solid var(--focus-ring) !important;
+    outline-offset: 2px !important;
+}
+
+.stTextInput input, .stNumberInput input, .stDateInput input,
+.stSelectbox [data-baseweb="select"], .stMultiSelect [data-baseweb="select"] {
+    color: var(--text) !important;
+    background-color: var(--bg) !important;
+    border-color: var(--border-strong) !important;
+}
+label, .stMarkdown p { color: var(--text-secondary); }
+
 .stat-card {
-    background: var(--zwart-mid);
-    border: 1px solid var(--zwart-rand);
-    border-top: 3px solid var(--oranje);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--primary);
     border-radius: 8px;
     padding: clamp(10px, 3vw, 18px);
     text-align: center;
     margin-bottom: 10px;
 }
-.stat-card.dim { border-top-color: var(--zwart-rand); }
+.stat-card.dim { border-top-color: var(--border-strong); }
 .stat-number {
     font-family: 'Bebas Neue', sans-serif;
     font-size: clamp(1.6rem, 5vw, 2.8rem);
     font-weight: 400;
-    color: var(--oranje);
+    color: var(--primary);
     line-height: 1.1;
     letter-spacing: 1px;
 }
-.stat-number.wit { color: var(--wit); }
+.stat-number.alt { color: var(--text); }
 .stat-label {
     font-size: clamp(0.62rem, 2vw, 0.78rem);
-    color: var(--grijs);
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 1.5px;
     margin-top: 2px;
+    font-weight: 600;
 }
 
-/* ── Team rijen ── */
 .team-row {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: var(--zwart-mid);
-    border: 1px solid var(--zwart-rand);
-    border-left: 4px solid var(--oranje);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
     border-radius: 8px;
     padding: 10px 14px;
     margin-bottom: 8px;
     transition: background 0.15s;
 }
-.team-row:hover { background: var(--zwart-licht); }
+.team-row:hover { background: var(--bg-muted); }
 .team-nr {
     width: 36px; height: 36px;
     border-radius: 50%;
-    background: var(--oranje);
-    color: var(--zwart);
+    background: var(--primary);
+    color: var(--primary-text);
     font-weight: 700;
-    font-size: 14px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
     font-family: 'Bebas Neue', sans-serif;
     font-size: 16px;
     letter-spacing: 0.5px;
 }
-.team-naam { font-weight: 600; font-size: 0.95rem; color: var(--wit); }
-.team-pos  { font-size: 0.78rem; color: var(--grijs); }
+.team-naam { font-weight: 600; font-size: 0.95rem; color: var(--text); }
+.team-pos  { font-size: 0.78rem; color: var(--text-muted); }
 
-/* ── Bewerkformulier ── */
 .edit-box {
-    background: var(--zwart-licht);
-    border: 1px solid var(--oranje);
+    background: var(--bg-subtle);
+    border: 2px solid var(--primary);
     border-radius: 10px;
     padding: 16px;
     margin-bottom: 10px;
 }
 
-/* ── Spelerkaarten ── */
 .speler-card {
-    background: var(--zwart-mid);
-    border: 1px solid var(--zwart-rand);
-    border-top: 3px solid var(--oranje);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--primary);
     border-radius: 8px;
     padding: 14px;
     margin-bottom: 10px;
 }
 
-/* ── Badges ── */
 .badge {
     display: inline-block;
     padding: 2px 9px;
@@ -157,35 +196,46 @@ h2, h3 {
     font-weight: 600;
     margin: 2px 2px 4px 0;
 }
-.badge-oranje { background: var(--oranje-dim); color: var(--oranje-licht); border: 1px solid #FF6B0044; }
-.badge-wit    { background: rgba(255,255,255,0.08); color: #ccc; border: 1px solid #ffffff22; }
-.badge-rood   { background: rgba(220,50,50,0.15);  color: #ff7070; border: 1px solid rgba(220,50,50,0.3); }
+.badge-primary {
+    background: var(--primary-light);
+    color: var(--primary-hover);
+    border: 1px solid #A8C4E8;
+}
+.badge-neutral {
+    background: var(--bg-muted);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+.badge-info {
+    background: #E0EEF9;
+    color: #0A4278;
+    border: 1px solid #9FC5E8;
+}
 
-.preview-naam { font-size: clamp(0.85rem, 3vw, 1rem); padding: 3px 0; color: var(--wit); }
+.preview-naam { font-size: clamp(0.85rem, 3vw, 1rem); padding: 3px 0; color: var(--text); }
 
-/* ── Divider ── */
-hr { border-color: var(--zwart-rand) !important; }
+hr { border-color: var(--border) !important; }
 
-/* ── Streamlit componenten aanpassen ── */
 .stTabs [data-baseweb="tab-list"] {
-    background: var(--zwart-mid);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 4px;
     gap: 4px;
 }
 .stTabs [data-baseweb="tab"] {
     background: transparent;
-    color: var(--grijs);
+    color: var(--text-muted);
     border-radius: 6px;
     font-family: 'Bebas Neue', sans-serif;
     letter-spacing: 1px;
     font-size: 1rem;
 }
 .stTabs [aria-selected="true"] {
-    background: var(--oranje) !important;
-    color: var(--zwart) !important;
+    background: var(--primary) !important;
+    color: var(--primary-text) !important;
 }
-.stDataFrame { border: 1px solid var(--zwart-rand); border-radius: 8px; }
+.stDataFrame { border: 1px solid var(--border); border-radius: 8px; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -331,10 +381,10 @@ elif st.session_state.page == "aanwezigheid":
 
     r1c1, r1c2 = st.columns(2)
     with r1c1: st.markdown(f'<div class="stat-card"><div class="stat-number">{totaal_spelers}</div><div class="stat-label">Spelers</div></div>', unsafe_allow_html=True)
-    with r1c2: st.markdown(f'<div class="stat-card"><div class="stat-number wit">{totaal_wedstrijden}</div><div class="stat-label">Wedstrijden</div></div>', unsafe_allow_html=True)
+    with r1c2: st.markdown(f'<div class="stat-card"><div class="stat-number alt">{totaal_wedstrijden}</div><div class="stat-label">Wedstrijden</div></div>', unsafe_allow_html=True)
     r2c1, r2c2 = st.columns(2)
     with r2c1: st.markdown(f'<div class="stat-card"><div class="stat-number">{gem_aanwezigheid}%</div><div class="stat-label">Gem. aanwezigheid</div></div>', unsafe_allow_html=True)
-    with r2c2: st.markdown(f'<div class="stat-card dim"><div class="stat-number wit">{gem_blessure}</div><div class="stat-label">Gem. geblesseerd p/wedstrijd</div></div>', unsafe_allow_html=True)
+    with r2c2: st.markdown(f'<div class="stat-card dim"><div class="stat-number alt">{gem_blessure}</div><div class="stat-label">Gem. geblesseerd p/wedstrijd</div></div>', unsafe_allow_html=True)
 
     st.markdown("---")
     tab1, tab2, tab3 = st.tabs(["📋 Registreren", "📊 Overzicht", "👥 Per speler"])
@@ -424,36 +474,37 @@ elif st.session_state.page == "aanwezigheid":
                 with cols[i % 2]:
                     st.markdown(f"""
                     <div class="speler-card">
-                        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:#fff;letter-spacing:0.5px">
+                        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:#1A2332;letter-spacing:0.5px">
                             #{speler['nummer']} {naam}
                         </div>
-                        <div style="color:#999;font-size:0.8rem;margin-bottom:8px">{speler['positie']}</div>
-                        <span class="badge badge-oranje">✅ {aanwezig}x aanwezig</span><br>
-                        <span class="badge badge-wit">❌ {afwezig}x afwezig</span>
-                        <span class="badge badge-rood">🩹 {blessure}x geblesseerd</span>
-                        <hr style="border-color:#333;margin:8px 0">
-                        <div style="color:var(--oranje);font-weight:700;font-size:1.1rem">{pct}%</div>
-                        <div style="color:#777;font-size:0.78rem">{aanwezig}/{totaal} wedstrijden aanwezig</div>
+                        <div style="color:#4A5C6E;font-size:0.8rem;margin-bottom:8px">{speler['positie']}</div>
+                        <span class="badge badge-primary">✅ {aanwezig}x aanwezig</span><br>
+                        <span class="badge badge-neutral">○ {afwezig}x afwezig</span>
+                        <span class="badge badge-info">🩹 {blessure}x geblesseerd</span>
+                        <hr style="border-color:#B8C4D0;margin:8px 0">
+                        <div style="color:#0B5CAD;font-weight:700;font-size:1.1rem">{pct}%</div>
+                        <div style="color:#4A5C6E;font-size:0.78rem">{aanwezig}/{totaal} wedstrijden aanwezig</div>
                     </div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGINA 3 — OPSTELLING
 # ══════════════════════════════════════════════════════════════════════════════
 else:
-    st.markdown("## 🟠 Opstelling")
+    st.markdown("## Opstelling")
     spelers_json = json.dumps(data["spelers"])
     opst_json    = json.dumps(data.get("opstelling", {}))
 
     opstelling_html = f"""
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{ background: #0E0E0E; font-family: 'Inter', sans-serif; color: #fff; padding: 12px; }}
+  body {{ background: #FFFFFF; font-family: 'Inter', sans-serif; color: #1A2332; padding: 12px; }}
   .container {{ display: flex; flex-direction: column; gap: 16px; max-width: 700px; margin: 0 auto; }}
-  h2 {{ font-family: 'Bebas Neue', cursive; color: #FF6B00; font-size: 1.4rem; letter-spacing: 2px; }}
+  h2 {{ font-family: 'Bebas Neue', cursive; color: #0A4A8C; font-size: 1.4rem; letter-spacing: 2px; }}
 
   .veld-wrap {{ position: relative; width: 100%; aspect-ratio: 68/105; max-height: 70vh; margin: 0 auto; }}
   #veld {{
@@ -473,76 +524,77 @@ else:
   .goal-onder {{ bottom:0; border-bottom:none; }}
   .gras-streep {{ position:absolute; top:0; bottom:0; width:9.09%; background:rgba(0,0,0,0.08); pointer-events:none; }}
 
-  /* Oranje speler tokens */
   .speler-token {{ position:absolute; transform:translate(-50%,-50%); cursor:grab; touch-action:none; user-select:none; z-index:10; display:flex; flex-direction:column; align-items:center; gap:2px; }}
   .speler-token:active {{ cursor:grabbing; }}
   .token-cirkel {{
     width: clamp(32px,7vw,44px); height: clamp(32px,7vw,44px);
     border-radius: 50%;
-    background: #FF6B00;
+    background: #0B5CAD;
     border: 2px solid #fff;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: clamp(10px,2.5vw,14px);
-    color: #0E0E0E;
-    box-shadow: 0 2px 10px rgba(255,107,0,0.5);
+    font-weight: 700;
+    color: #FFFFFF;
+    box-shadow: 0 2px 10px rgba(11,92,173,0.35);
     transition: box-shadow 0.15s;
     font-family: 'Bebas Neue', cursive;
     font-size: clamp(12px,3vw,16px);
     letter-spacing: 0.5px;
   }}
-  .speler-token.dragging .token-cirkel {{ box-shadow: 0 4px 20px rgba(255,107,0,0.8); }}
+  .speler-token.dragging .token-cirkel {{ box-shadow: 0 4px 20px rgba(11,92,173,0.55); }}
   .token-naam {{
-    background: rgba(14,14,14,0.85);
-    color: #fff;
+    background: #FFFFFF;
+    color: #1A2332;
     font-size: clamp(7px,1.8vw,10px);
-    padding: 1px 5px;
+    font-weight: 600;
+    padding: 2px 6px;
     border-radius: 3px;
     white-space: nowrap;
     max-width: clamp(50px,12vw,70px);
     overflow: hidden; text-overflow: ellipsis; text-align: center;
-    border: 1px solid rgba(255,107,0,0.3);
+    border: 1px solid #0B5CAD;
   }}
 
-  /* Bank */
-  .bench {{ background:#1A1A1A; border:1px solid #333; border-top:3px solid #FF6B00; border-radius:8px; padding:12px; }}
-  .bench-titel {{ font-family:'Bebas Neue',cursive; color:#999; letter-spacing:1px; font-size:1rem; margin-bottom:10px; }}
+  .bench {{ background:#F4F6F9; border:1px solid #B8C4D0; border-top:4px solid #0B5CAD; border-radius:8px; padding:12px; }}
+  .bench-titel {{ font-family:'Bebas Neue',cursive; color:#4A5C6E; letter-spacing:1px; font-size:1rem; margin-bottom:10px; }}
   .bench-lijst {{ display:flex; flex-wrap:wrap; gap:8px; }}
   .bench-item {{
     display:flex; align-items:center; gap:6px;
-    background:#242424; border:1px solid #333;
+    background:#FFFFFF; border:1px solid #B8C4D0;
     border-radius:20px; padding:5px 12px 5px 6px;
     cursor:pointer; transition: border-color 0.15s, background 0.15s;
     font-size:clamp(11px,2.5vw,13px);
+    color:#1A2332;
   }}
-  .bench-item:hover {{ border-color:#FF6B00; background:rgba(255,107,0,0.08); }}
-  .bench-item.geplaatst {{ opacity:0.3; cursor:default; pointer-events:none; }}
-  .bench-item.actief {{ border-color:#FF6B00; background:rgba(255,107,0,0.15); }}
+  .bench-item:hover {{ border-color:#0B5CAD; background:#E3EEF8; }}
+  .bench-item.geplaatst {{ opacity:0.45; cursor:default; pointer-events:none; }}
+  .bench-item.actief {{ border-color:#0B5CAD; background:#E3EEF8; }}
   .bench-nr {{
     width:26px; height:26px; border-radius:50%;
-    background:#FF6B00; color:#0E0E0E;
+    background:#0B5CAD; color:#FFFFFF;
     font-weight:700; font-size:12px;
     font-family:'Bebas Neue',cursive; letter-spacing:0.5px;
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
   }}
 
-  .hint {{ color:#FF8C33; font-size:0.82rem; margin-top:8px; width:100%; cursor:pointer; }}
-  .hint:hover {{ color:#FF6B00; }}
+  .hint {{ color:#094985; font-size:0.82rem; margin-top:8px; width:100%; cursor:pointer; text-decoration:underline; }}
+  .hint:hover {{ color:#0B5CAD; }}
 
-  /* Knoppen */
   .knoppen {{ display:flex; gap:8px; flex-wrap:wrap; }}
-  .btn {{ flex:1; min-width:120px; padding:10px 16px; border-radius:8px; border:none; font-family:'Bebas Neue',cursive; font-size:1rem; letter-spacing:1px; cursor:pointer; transition:opacity 0.15s; }}
-  .btn:hover {{ opacity:0.85; }}
-  .btn-oranje {{ background:#FF6B00; color:#0E0E0E; }}
-  .btn-zwart  {{ background:#242424; color:#ccc; border:1px solid #333; }}
+  .btn {{ flex:1; min-width:120px; padding:10px 16px; border-radius:8px; border:2px solid transparent; font-family:'Bebas Neue',cursive; font-size:1rem; letter-spacing:1px; cursor:pointer; transition:background 0.15s; font-weight:600; }}
+  .btn:focus-visible {{ outline:3px solid #0B5CAD; outline-offset:2px; }}
+  .btn-primary {{ background:#0B5CAD; color:#FFFFFF; border-color:#0B5CAD; }}
+  .btn-primary:hover {{ background:#094985; }}
+  .btn-secondary {{ background:#F4F6F9; color:#1A2332; border-color:#6B7C8F; }}
+  .btn-secondary:hover {{ background:#E8EDF3; }}
 
-  .opgeslagen {{ color:#FF6B00; font-size:0.9rem; display:none; font-family:'Bebas Neue',cursive; letter-spacing:1px; }}
+  .opgeslagen {{ color:#1B6B38; font-size:0.9rem; display:none; font-family:'Bebas Neue',cursive; letter-spacing:1px; font-weight:600; }}
 
   .formation-select {{
-    background:#242424; color:#fff;
-    border:1px solid #333; border-radius:8px;
+    background:#FFFFFF; color:#1A2332;
+    border:2px solid #6B7C8F; border-radius:8px;
     padding:8px 12px; font-size:0.9rem; cursor:pointer; flex:1; min-width:140px;
   }}
-  .formation-select:focus {{ outline:none; border-color:#FF6B00; }}
+  .formation-select:focus {{ outline:none; border-color:#0B5CAD; box-shadow:0 0 0 3px rgba(11,92,173,0.25); }}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -550,8 +602,8 @@ else:
 <div class="container">
 
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <h2>🟠 OPSTELLING BV O19-1</h2>
-    <select class="formation-select" id="formatie" onchange="zetFormatie()">
+    <h2>⚽ OPSTELLING BV O19-1</h2>
+    <select class="formation-select" id="formatie" aria-label="Kies formatie" onchange="zetFormatie()">
       <option value="">-- Kies formatie --</option>
       <option value="4-3-3">4-3-3</option>
       <option value="4-4-2">4-4-2</option>
@@ -582,10 +634,10 @@ else:
   </div>
 
   <div class="knoppen">
-    <button class="btn btn-oranje" onclick="slaOpOp()">💾 Opstelling opslaan</button>
-    <button class="btn btn-zwart"  onclick="reset()">🔄 Reset veld</button>
+    <button type="button" class="btn btn-primary" onclick="slaOpOp()">💾 Opstelling opslaan</button>
+    <button type="button" class="btn btn-secondary" onclick="reset()">🔄 Reset veld</button>
   </div>
-  <span class="opgeslagen" id="opgeslagen-msg">✅ OPSTELLING OPGESLAGEN!</span>
+  <span class="opgeslagen" id="opgeslagen-msg" role="status">✅ OPSTELLING OPGESLAGEN!</span>
 </div>
 
 <script>
