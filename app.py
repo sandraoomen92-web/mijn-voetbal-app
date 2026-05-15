@@ -133,17 +133,12 @@ h1 {
     letter-spacing: 3px;
     color: var(--accent-heading);
     margin-bottom: 0;
-    border-bottom: 3px solid var(--orange);
-    padding-bottom: 0.25rem;
-    display: inline-block;
 }
 h2, h3 {
     font-family: 'Bebas Neue', sans-serif;
     letter-spacing: 1px;
     color: var(--text);
     font-size: clamp(1.1rem, 4vw, 1.6rem);
-    border-left: 4px solid var(--orange);
-    padding-left: 0.5rem;
 }
 
 /* Streamlit knoppen */
@@ -622,7 +617,7 @@ else:
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{ background: #FFFFFF; font-family: 'Inter', sans-serif; color: #1A2332; padding: 12px; }}
   .container {{ display: flex; flex-direction: column; gap: 16px; max-width: 700px; margin: 0 auto; }}
-  h2 {{ font-family: 'Bebas Neue', cursive; color: #B84A00; font-size: 1.4rem; letter-spacing: 2px; border-bottom: 2px solid #E85D00; padding-bottom: 4px; }}
+  h2 {{ font-family: 'Bebas Neue', cursive; color: #B84A00; font-size: 1.4rem; letter-spacing: 2px; }}
 
   .veld-wrap {{ position: relative; width: 100%; aspect-ratio: 68/105; max-height: 70vh; margin: 0 auto; }}
   #veld {{
