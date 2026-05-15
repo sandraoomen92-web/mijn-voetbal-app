@@ -114,7 +114,10 @@ st.markdown("""
     --orange-text:   #FFFFFF;
 
     --success:       #1B6B38;
-    --accent-heading: var(--orange-dark);
+  /* Donker oranje / bijna-zwart: ≥4.5:1 op wit (ook op kleine mobiele schermen) */
+    --heading-brand: #9A3D00;
+    --heading:       #1A2332;
+    --accent-heading: var(--heading-brand);
     --focus-ring:    var(--orange-dark);
 }
 
@@ -127,18 +130,55 @@ html, body, [class*="css"] {
 .stApp { background-color: var(--bg) !important; }
 section[data-testid="stSidebar"] { display: none; }
 
-h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(1.8rem, 6vw, 3rem);
-    letter-spacing: 3px;
-    color: var(--accent-heading);
-    margin-bottom: 0;
+/* Koppen: expliciet contrast + !important i.v.m. Streamlit-theme op mobiel */
+.stApp h1,
+.stApp [data-testid="stMarkdown"] h1,
+.stApp [data-testid="stMarkdownContainer"] h1,
+.stApp .stMarkdown h1 {
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: clamp(1.8rem, 6vw, 3rem) !important;
+    letter-spacing: 3px !important;
+    color: var(--heading-brand) !important;
+    -webkit-text-fill-color: var(--heading-brand) !important;
+    margin-bottom: 0 !important;
+    opacity: 1 !important;
 }
-h2, h3 {
-    font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 1px;
-    color: var(--text);
-    font-size: clamp(1.1rem, 4vw, 1.6rem);
+
+.stApp h2,
+.stApp h3,
+.stApp [data-testid="stMarkdown"] h2,
+.stApp [data-testid="stMarkdown"] h3,
+.stApp [data-testid="stMarkdownContainer"] h2,
+.stApp [data-testid="stMarkdownContainer"] h3,
+.stApp .stMarkdown h2,
+.stApp .stMarkdown h3 {
+    font-family: 'Bebas Neue', sans-serif !important;
+    letter-spacing: 1px !important;
+    color: var(--heading) !important;
+    -webkit-text-fill-color: var(--heading) !important;
+    font-size: clamp(1.1rem, 4vw, 1.6rem) !important;
+    opacity: 1 !important;
+}
+
+@media (max-width: 768px) {
+    .stApp h1,
+    .stApp [data-testid="stMarkdown"] h1,
+    .stApp [data-testid="stMarkdownContainer"] h1,
+    .stApp .stMarkdown h1 {
+        color: var(--heading) !important;
+        -webkit-text-fill-color: var(--heading) !important;
+    }
+    .stApp h2,
+    .stApp h3,
+    .stApp [data-testid="stMarkdown"] h2,
+    .stApp [data-testid="stMarkdown"] h3,
+    .stApp [data-testid="stMarkdownContainer"] h2,
+    .stApp [data-testid="stMarkdownContainer"] h3,
+    .stApp .stMarkdown h2,
+    .stApp .stMarkdown h3 {
+        color: var(--heading) !important;
+        -webkit-text-fill-color: var(--heading) !important;
+    }
 }
 
 /* Streamlit knoppen */
@@ -273,6 +313,25 @@ label, .stMarkdown p { color: var(--text-secondary); }
     background: #E0EEF9;
     color: #0A4278;
     border: 1px solid #9FC5E8;
+}
+
+/* Multiselect-tags bij afwezig / geblesseerd (standaard rood → blauw) */
+[data-testid="stMultiSelect"] [data-baseweb="tag"],
+.stMultiSelect [data-baseweb="tag"] {
+    background-color: #E0EEF9 !important;
+    border: 1px solid #9FC5E8 !important;
+    border-radius: 6px !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] [role="option"],
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span,
+.stMultiSelect [data-baseweb="tag"] span {
+    color: #0A4278 !important;
+    -webkit-text-fill-color: #0A4278 !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] svg,
+.stMultiSelect [data-baseweb="tag"] svg {
+    fill: #0A4278 !important;
+    color: #0A4278 !important;
 }
 
 .preview-naam { font-size: clamp(0.85rem, 3vw, 1rem); padding: 3px 0; color: var(--text); }
@@ -476,10 +535,12 @@ elif st.session_state.page == "aanwezigheid":
             st.markdown("---")
             with st.expander(f"✅ Aanwezig ({len(aanwezig_namen)})", expanded=True):
                 for n in aanwezig_namen: st.markdown(f'<div class="preview-naam">🟠 {n}</div>', unsafe_allow_html=True)
-            with st.expander(f"❌ Afwezig ({len(afwezig_selectie)})"):
-                for n in afwezig_selectie: st.markdown(f'<div class="preview-naam">⚪ {n}</div>', unsafe_allow_html=True)
-            with st.expander(f"🩹 Geblesseerd ({len(blessure_selectie)})"):
-                for n in blessure_selectie: st.markdown(f'<div class="preview-naam">⚫ {n}</div>', unsafe_allow_html=True)
+            with st.expander(f"Afwezig ({len(afwezig_selectie)})"):
+                for n in afwezig_selectie:
+                    st.markdown(f'<span class="badge badge-info">{n}</span>', unsafe_allow_html=True)
+            with st.expander(f"Geblesseerd ({len(blessure_selectie)})"):
+                for n in blessure_selectie:
+                    st.markdown(f'<span class="badge badge-info">🩹 {n}</span>', unsafe_allow_html=True)
 
             if st.button("💾 Opslaan", type="primary"):
                 data["trainingen"][datum_key] = {"afwezig": afwezig_selectie, "blessure": blessure_selectie}
@@ -542,7 +603,7 @@ elif st.session_state.page == "aanwezigheid":
                         </div>
                         <div style="color:#4A5C6E;font-size:0.8rem;margin-bottom:8px">{speler['positie']}</div>
                         <span class="badge badge-primary">✅ {aanwezig}x aanwezig</span><br>
-                        <span class="badge badge-neutral">○ {afwezig}x afwezig</span>
+                        <span class="badge badge-info">○ {afwezig}x afwezig</span>
                         <span class="badge badge-info">🩹 {blessure}x geblesseerd</span>
                         <hr style="border-color:#B8C4D0;margin:8px 0">
                         <div style="color:#B84A00;font-weight:700;font-size:1.1rem">{pct}%</div>
@@ -617,7 +678,7 @@ else:
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{ background: #FFFFFF; font-family: 'Inter', sans-serif; color: #1A2332; padding: 12px; }}
   .container {{ display: flex; flex-direction: column; gap: 16px; max-width: 700px; margin: 0 auto; }}
-  h2 {{ font-family: 'Bebas Neue', cursive; color: #B84A00; font-size: 1.4rem; letter-spacing: 2px; }}
+  h2 {{ font-family: 'Bebas Neue', cursive; color: #1A2332; font-size: 1.4rem; letter-spacing: 2px; }}
 
   .veld-wrap {{ position: relative; width: 100%; aspect-ratio: 68/105; max-height: 70vh; margin: 0 auto; }}
   #veld {{
