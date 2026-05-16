@@ -1,0 +1,11 @@
+{
+  "spelers": [
+    {
+      "naam": "test1",
+      "positie": "Keeper",
+      "nummer": 1
+    }
+  ],
+  "trainingen": {},
+  "opstellingen": {}
+}
