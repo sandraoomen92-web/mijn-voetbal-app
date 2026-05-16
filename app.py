@@ -7,7 +7,7 @@ import os
 st.set_page_config(page_title="⚽ BV O19-1 Dashboard", page_icon="⚽", layout="wide")
 
 # Maak gebruik van de INGEBOUWDE Google Sheets verbinding (vereist geen externe st_gsheets_connection module!)
-conn = st.connection("sheets", type="sheets")
+conn = st.connection("gsheets")
 
 def load_data():
     try:
