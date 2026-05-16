@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import date, datetime
 import json
 import os
-from streamlit_gsheets import GSheetsConnection
+from st_gsheets_connection import GSheetsConnection
 
 st.set_page_config(page_title="⚽ BV O19-1 Dashboard", page_icon="⚽", layout="wide")
 
