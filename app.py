@@ -3,21 +3,19 @@ import pandas as pd
 from datetime import date, datetime
 import json
 import os
-from streamlit_gsheets import GSheetsConnection  # <-- NIEUW: Voor de Google Sheets koppeling
+from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="⚽ BV O19-1 Dashboard", page_icon="⚽", layout="wide")
 
-# Maak verbinding met Google Sheets (Streamlit pakt automatisch de Secrets die je net hebt ingevuld)
+# Maak verbinding met Google Sheets
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def load_data():
-      try:
-        # Haal de data op uit de 3 verschillende tabbladen
+    try:
         df_spelers = conn.read(worksheet="spelers", ttl=0)
         df_trainingen = conn.read(worksheet="trainingen", ttl=0)
         df_opstelling = conn.read(worksheet="opstelling", ttl=0)
         
-        # We starten met de basisstructuur van jouw app
         data = {"spelers": [], "trainingen": {}, "opstelling": {}}
         
         # 1. Spelers inladen
@@ -52,26 +50,22 @@ def load_data():
                         "formatie": str(row['formatie']) if pd.notna(row['formatie']) else ""
                     }
 
-        # 🔥 EXTRA VEILIGHEID: Als er nog GEEN spelers zijn (lege Google Sheet),
-        # dan stoppen we er tijdelijk één test-speler in om de JavaScript crash te voorkomen!
+        # Veiligheid: Voeg een basisspeler toe als de lijst leeg is om JS crash te voorkomen
         if not data["spelers"]:
             data["spelers"].append({"naam": "Eerste Speler (Test)", "positie": "Keeper", "nummer": 1})
 
         return data
-        
     except Exception as e:
-        # Als er écht iets misgaat, zorgen we ook hier voor een veilige basis met 1 speler
         return {"spelers": [{"naam": "Eerste Speler (Test)", "positie": "Keeper", "nummer": 1}], "trainingen": {}, "opstelling": {}}
-   }
 
 def save_data(data):
-    # 1. Spelers omzetten naar een tabel voor Google Sheets
+    # 1. Spelers dataframe bouwen
     spelers_rijen = []
     for s in data["spelers"]:
         spelers_rijen.append({"naam": s["naam"], "positie": s["positie"], "nummer": s["nummer"]})
     df_spelers = pd.DataFrame(spelers_rijen) if spelers_rijen else pd.DataFrame(columns=["naam", "positie", "nummer"])
     
-    # 2. Trainingen/Aanwezigheid omzetten naar een tabel (inclusief de notities!)
+    # 2. Trainingen dataframe bouwen
     trainingen_rijen = []
     for datum, sessie in data["trainingen"].items():
         if not datum.endswith("_notitie"):
@@ -85,7 +79,7 @@ def save_data(data):
             })
     df_trainingen = pd.DataFrame(trainingen_rijen) if trainingen_rijen else pd.DataFrame(columns=["datum", "afwezig", "blessure", "notitie"])
     
-    # 3. Opstellingen omzetten naar een tabel
+    # 3. Opstellingen dataframe bouwen
     opstelling_rijen = []
     for datum, opst in data["opstelling"].items():
         opstelling_rijen.append({
@@ -95,11 +89,10 @@ def save_data(data):
         })
     df_opstelling = pd.DataFrame(opstelling_rijen) if opstelling_rijen else pd.DataFrame(columns=["datum", "posities", "formatie"])
     
-    # Schrijf de tabellen live naar de juiste tabbladen in Google Sheets
+    # Schrijf live naar de Google Sheet tabbladen
     conn.update(worksheet="spelers", data=df_spelers)
     conn.update(worksheet="trainingen", data=df_trainingen)
     conn.update(worksheet="opstelling", data=df_opstelling)
-
 
 def list_opstelling_datums(data):
     return sorted(data.get("opstelling", {}).keys(), reverse=True)
@@ -112,160 +105,172 @@ if "edit_speler" not in st.session_state:
     st.session_state.edit_speler = None
 if "opstelling_datum" not in st.session_state:
     st.session_state.opstelling_datum = date.today()
-# Bridge: JavaScript schrijft posities hierin via postMessage
-if "opst_posities" not in st.session_state:
-    st.session_state.opst_posities = {}
-if "opst_formatie" not in st.session_state:
-    st.session_state.opst_formatie = ""
 
 data = st.session_state.data
 if "opstelling" not in data:
     data["opstelling"] = {}
 
-# ─── CSS ──────────────────────────────────────────────────────────────────────
+# ─── CSS (Jouw originele styling) ─────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
-
 :root {
-    --oranje:      #C44A00;
-    --oranje-dim:  #FFF0E6;
-    --zwart:       #111111;
-    --tekst:       #111111;
-    --tekst-mid:   #333333;
-    --tekst-zacht: #555555;
-    --bg:          #FFFFFF;
-    --bg-subtle:   #F5F5F5;
-    --bg-muted:    #EBEBEB;
-    --rand:        #BBBBBB;
-    --rand-sterk:  #555555;
+    --oranje:      #C44A00; --oranje-dim:  #FFF0E6; --zwart:       #111111;
+    --tekst:       #111111; --tekst-mid:   #333333; --tekst-zacht: #555555;
+    --bg:          #FFFFFF; --bg-subtle:   #F5F5F5; --bg-muted:    #EBEBEB;
+    --rand:        #BBBBBB; --rand-sterk:  #555555;
 }
-
-html, body, .stApp,
-[data-testid="stAppViewContainer"],
-[data-testid="stMain"],
-[data-testid="block-container"],
-[class*="css"] {
-    background-color: var(--bg) !important;
-    color: var(--tekst) !important;
-    font-family: 'Inter', sans-serif !important;
+html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="block-container"] {
+    background-color: var(--bg) !important; color: var(--tekst) !important; font-family: 'Inter', sans-serif !important;
 }
-
 section[data-testid="stSidebar"] { display: none !important; }
+h1, h2, h3 { font-family: 'Bebas Neue', sans-serif !important; letter-spacing: 2px !important; color: var(--zwart) !important; }
+h1 { color: var(--oranje) !important; font-size: clamp(1.8rem, 6vw, 3rem) !important; }
+.stButton > button { font-weight: 700 !important; border-radius: 8px !important; min-height: 2.75rem !important; }
+.stButton > button[kind="primary"] { background-color: var(--oranje) !important; color: #FFF !important; }
+.stat-card { background: var(--bg-subtle); border: 1px solid var(--rand); border-top: 4px solid var(--oranje); border-radius: 8px; padding: 15px; text-align: center; margin-bottom: 10px;}
+.stat-number { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: var(--oranje); }
+.team-row { display: flex; align-items: center; gap: 12px; background: var(--bg-subtle); border: 1px solid var(--rand); border-left: 4px solid var(--oranje); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+.team-nr { width:36px; height:36px; border-radius:50%; background:var(--oranje); color:#FFF; font-family:'Bebas Neue',sans-serif; display:flex; align-items:center; justify-content:center; }
+.speler-card { background:var(--bg-subtle); border:1px solid var(--rand); border-top:4px solid var(--oranje); border-radius:8px; padding:14px; margin-bottom:10px; }
+.badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.78rem; font-weight:700; margin:2px; }
+.badge-oranje { background:var(--oranje-dim); color:var(--oranje); border:1px solid var(--oranje); }
+.badge-grijs  { background:var(--bg-muted); color:var(--tekst-mid); border:1px solid var(--rand-sterk); }
+.preview-naam { font-size:0.95rem; padding:4px 0; color:var(--tekst); font-weight:600; }
+</style>
+""", unsafe_allow_html=True)
 
-/* Koppen */
-h1, h2, h3,
-.stApp h1, .stApp h2, .stApp h3,
-[data-testid="stMarkdown"] h1,
-[data-testid="stMarkdown"] h2,
-[data-testid="stMarkdown"] h3,
-[data-testid="stMarkdownContainer"] h1,
-[data-testid="stMarkdownContainer"] h2,
-[data-testid="stMarkdownContainer"] h3 {
-    font-family: 'Bebas Neue', sans-serif !important;
-    letter-spacing: 2px !important;
-    color: var(--zwart) !important;
-    -webkit-text-fill-color: var(--zwart) !important;
-    opacity: 1 !important;
-}
-h1, .stApp h1,
-[data-testid="stMarkdown"] h1,
-[data-testid="stMarkdownContainer"] h1 {
-    font-size: clamp(1.8rem, 6vw, 3rem) !important;
-    color: var(--oranje) !important;
-    -webkit-text-fill-color: var(--oranje) !important;
-}
+# ─── Header + navigatie ────────────────────────────────────────────────────────
+st.markdown("# ⚽ VOETBAL DASHBOARD BV O19-1")
+c1, c2, c3, _ = st.columns([1, 1, 1, 2])
+with c1:
+    if st.button("👥 Team", use_container_width=True, type="primary" if st.session_state.page == "team" else "secondary"):
+        st.session_state.page = "team"; st.session_state.edit_speler = None; st.rerun()
+with c2:
+    if st.button("📋 Aanwezigheid", use_container_width=True, type="primary" if st.session_state.page == "aanwezigheid" else "secondary"):
+        st.session_state.page = "aanwezigheid"; st.session_state.edit_speler = None; st.rerun()
+with c3:
+    if st.button("🟠 Opstelling", use_container_width=True, type="primary" if st.session_state.page == "opstelling" else "secondary"):
+        st.session_state.page = "opstelling"; st.session_state.edit_speler = None; st.rerun()
+st.markdown("---")
 
-/* Labels & tekst */
-label, p, span,
-[data-testid="stWidgetLabel"],
-[data-testid="stExpander"] > details > summary,
-[data-testid="stExpander"] > details > summary *,
-.streamlit-expanderHeader,
-.streamlit-expanderHeader * {
-    color: var(--tekst) !important;
-    -webkit-text-fill-color: var(--tekst) !important;
-    opacity: 1 !important;
-}
-[data-testid="stExpander"] > details > summary,
-.streamlit-expanderHeader {
-    background-color: var(--bg-subtle) !important;
-    font-weight: 600 !important;
-}
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGINA 1 — TEAM
+# ══════════════════════════════════════════════════════════════════════════════
+if st.session_state.page == "team":
+    st.markdown("## 👥 Teambeheer")
+    with st.expander("➕ Nieuwe speler toevoegen", expanded=not bool(data["spelers"])):
+        col1, col2, col3 = st.columns([2, 1, 1])
+        with col1: nieuwe_naam = st.text_input("Naam", placeholder="Jan de Vries", key="nieuw_naam")
+        with col2: nieuwe_positie = st.selectbox("Positie", ["Keeper","Verdediger","Middenvelder","Aanvaller"], key="nieuw_pos")
+        with col3: nieuwe_nummer = st.number_input("Rugnummer", min_value=1, max_value=99, value=1, key="nieuw_nr")
+        if st.button("✅ Speler toevoegen", type="primary"):
+            if nieuwe_naam.strip():
+                if nieuwe_naam.strip() in [s["naam"] for s in data["spelers"]]:
+                    st.error("Speler bestaat al!")
+                else:
+                    data["spelers"].append({"naam": nieuwe_naam.strip(), "positie": nieuwe_positie, "nummer": int(nieuwe_nummer)})
+                    save_data(data); st.success(f"✅ {nieuwe_naam.strip()} toegevoegd!"); st.rerun()
+            else: st.warning("Vul een naam in.")
 
-/* Inputs */
-input, textarea,
-.stTextInput input, .stNumberInput input, .stDateInput input {
-    color: var(--tekst) !important;
-    -webkit-text-fill-color: var(--tekst) !important;
-    background-color: var(--bg) !important;
-    border-color: var(--rand-sterk) !important;
-}
-[data-baseweb="select"],
-[data-baseweb="select"] div,
-[data-baseweb="select"] span {
-    color: var(--tekst) !important;
-    -webkit-text-fill-color: var(--tekst) !important;
-    background-color: var(--bg) !important;
-}
-[data-baseweb="menu"] li { color: var(--tekst) !important; background: var(--bg) !important; }
-[data-baseweb="menu"] li:hover { background: var(--oranje-dim) !important; }
+    st.markdown("---")
+    st.markdown(f"### Spelerslijst ({len(data['spelers'])} spelers)")
+    pos_volgorde = {"Keeper":0,"Verdediger":1,"Middenvelder":2,"Aanvaller":3}
+    pos_icons = {"Keeper":"🧤","Verdediger":"🛡️","Middenvelder":"⚙️","Aanvaller":"⚡"}
+    gesorteerd = sorted(data["spelers"], key=lambda x: (pos_volgorde.get(x["positie"],9), x["nummer"]))
+    
+    for speler in gesorteerd:
+        naam = speler["naam"]
+        if st.session_state.edit_speler == naam:
+            st.markdown('<div class="edit-box">', unsafe_allow_html=True)
+            ec1, ec2, ec3 = st.columns([2,1,1])
+            with ec1: nieuwe_naam_e = st.text_input("Naam", value=naam, key=f"edit_naam_{naam}")
+            with ec2: 
+                pos_opties = ["Keeper","Verdediger","Middenvelder","Aanvaller"]
+                nieuwe_pos_e = st.selectbox("Positie", pos_opties, index=pos_opties.index(speler["positie"]), key=f"edit_pos_{naam}")
+            with ec3: nieuwe_nr_e = st.number_input("Rugnummer", min_value=1, max_value=99, value=speler["nummer"], key=f"edit_nr_{naam}")
+            bc1, bc2 = st.columns(2)
+            with bc1:
+                if st.button("💾 Opslaan", key=f"save_{naam}", type="primary", use_container_width=True):
+                    for s in data["spelers"]:
+                        if s["naam"] == naam:
+                            s["naam"]=nieuwe_naam_e.strip(); s["positie"]=nieuwe_pos_e; s["nummer"]=int(nieuwe_nr_e)
+                            break
+                    save_data(data); st.session_state.edit_speler=None; st.rerun()
+            with bc2:
+                if st.button("❌ Annuleren", key=f"cancel_{naam}", use_container_width=True):
+                    st.session_state.edit_speler=None; st.rerun()
+        else:
+            rc1, rc2 = st.columns([5,2])
+            with rc1:
+                st.markdown(f"""<div class="team-row">
+                    <div class="team-nr">{speler['nummer']}</div>
+                    <div><div class="team-naam">{naam}</div>
+                    <div class="team-pos">{pos_icons.get(speler['positie'],'⚽')} {speler['positie']}</div></div>
+                </div>""", unsafe_allow_html=True)
+            with rc2:
+                bc1, bc2 = st.columns(2)
+                with bc1:
+                    if st.button("✏️", key=f"edit_{naam}", use_container_width=True):
+                        st.session_state.edit_speler=naam; st.rerun()
+                with bc2:
+                    if st.button("🗑️", key=f"del_{naam}", use_container_width=True):
+                        data["spelers"]=[s for s in data["spelers"] if s["naam"]!=naam]
+                        save_data(data); st.rerun()
 
-/* Multiselect tags */
-[data-baseweb="tag"] {
-    background-color: var(--oranje-dim) !important;
-    border: 1px solid var(--oranje) !important;
-    border-radius: 6px !important;
-}
-[data-baseweb="tag"] span {
-    color: var(--oranje) !important;
-    -webkit-text-fill-color: var(--oranje) !important;
-    font-weight: 700 !important;
-}
-[data-baseweb="tag"] svg { fill: var(--oranje) !important; }
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGINA 2 — AANWEZIGHEID
+# ══════════════════════════════════════════════════════════════════════════════
+elif st.session_state.page == "aanwezigheid":
+    echte_wedstrijden = {k:v for k,v in data["trainingen"].items() if not k.endswith("_notitie")}
+    totaal_spelers = len(data["spelers"])
+    totaal_wedstrijden = len(echte_wedstrijden)
+    speler_namen = [s["naam"] for s in data["spelers"]]
 
-/* Knoppen */
-.stButton > button {
-    font-family: 'Inter', sans-serif !important;
-    font-weight: 700 !important;
-    font-size: 0.9rem !important;
-    border-radius: 8px !important;
-    min-height: 2.75rem !important;
-    border-width: 2px !important;
-}
-.stButton > button[kind="primary"] {
-    background-color: var(--oranje) !important;
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    border-color: var(--oranje) !important;
-}
-.stButton > button[kind="secondary"] {
-    background-color: var(--bg-subtle) !important;
-    color: var(--zwart) !important;
-    -webkit-text-fill-color: var(--zwart) !important;
-    border-color: var(--rand-sterk) !important;
-}
+    def speler_stats(naam):
+        aanwezig=afwezig=blessure=0
+        for sessie in echte_wedstrijden.values():
+            if naam in sessie.get("blessure",[]): blessure+=1
+            elif naam in sessie.get("afwezig",[]): afwezig+=1
+            else: aanwezig+=1
+        return aanwezig, afwezig, blessure
 
-/* Alerts */
-[data-testid="stAlert"] p,
-[data-testid="stAlert"] span {
-    color: var(--tekst) !important;
-    -webkit-text-fill-color: var(--tekst) !important;
-}
+    r1c1, r1c2 = st.columns(2)
+    with r1c1: st.markdown(f'<div class="stat-card"><div class="stat-number">{totaal_spelers}</div><div class="stat-label">Spelers</div></div>', unsafe_allow_html=True)
+    with r1c2: st.markdown(f'<div class="stat-card"><div class="stat-number">{totaal_wedstrijden}</div><div class="stat-label">Wedstrijden</div></div>', unsafe_allow_html=True)
+    st.markdown("---")
 
-/* Tabs */
-.stTabs [data-baseweb="tab-list"] {
-    background: var(--bg-subtle) !important;
-    border: 1px solid var(--rand) !important;
-    border-radius: 8px; padding: 4px; gap: 4px;
-}
-.stTabs [data-baseweb="tab"] {
-    background: transparent !important;
-    color: var(--tekst-mid) !important;
-    -webkit-text-fill-color: var(--tekst-mid) !important;
-    font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 1px; font-size: 1rem; border-radius: 6px;
-}
-.stTabs [aria-selected="true"] {
-    background: var(--oranje) !important;
-    color: #FFFFFF !important;
+    tab1, tab2 = st.tabs(["📋 Registreren","📊 Overzicht"])
+    with tab1:
+        st.markdown("## 📋 Aanwezigheid registreren")
+        wedstrijd_datum = st.date_input("📅 Datum wedstrijd", value=date.today())
+        datum_key = str(wedstrijd_datum)
+        wedstrijd_notitie = st.text_input("📝 Notitie (optioneel)", placeholder="Bijv. Uitwedstrijd...")
+        bestaande = echte_wedstrijden.get(datum_key, {"afwezig":[],"blessure":[]})
+        
+        afwezig_selectie = st.multiselect("❌ Afwezig", options=speler_namen, default=[n for n in bestaande.get("afwezig",[]) if n in speler_namen])
+        blessure_selectie = st.multiselect("🩹 Geblesseerd", options=speler_namen, default=[n for n in bestaande.get("blessure",[]) if n in speler_namen])
+        
+        if st.button("💾 Aanwezigheid opslaan", type="primary"):
+            data["trainingen"][datum_key] = {"afwezig":afwezig_selectie,"blessure":blessure_selectie}
+            if wedstrijd_notitie: data["trainingen"][f"{datum_key}_notitie"] = wedstrijd_notitie
+            save_data(data); st.success("✅ Opgeslagen!"); st.rerun()
+
+    with tab2:
+        if not echte_wedstrijden: st.info("Nog geen data.")
+        else:
+            rows = []
+            for naam in speler_namen:
+                aanwezig, afwezig, blessure = speler_stats(naam)
+                rows.append({"Speler": naam, "✅ Aanwezig": aanwezig, "❌ Afwezig": afwezig, "🩹 Blessure": blessure})
+            st.dataframe(pd.DataFrame(rows), use_container_width=True)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGINA 3 — OPSTELLING (100% Veilige Modus)
+# ══════════════════════════════════════════════════════════════════════════════
+else:
+    st.markdown("## 🟠 Opstelling per wedstrijd")
+    alle_opst_keys = list_opstelling_datums(data)
+    
+    gekozen_datum = st.date_input("📅 Wedstrijddatum", value=st.session_state.opstelling_datum)
+    if gekozen_datum != st.session_state.opstelling_datum:
