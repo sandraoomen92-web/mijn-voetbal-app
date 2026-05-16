@@ -3,12 +3,11 @@ import pandas as pd
 from datetime import date, datetime
 import json
 import os
-from st_gsheets_connection import GSheetsConnection
 
 st.set_page_config(page_title="⚽ BV O19-1 Dashboard", page_icon="⚽", layout="wide")
 
-# Maak verbinding met Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
+# Maak gebruik van de INGEBOUWDE Google Sheets verbinding (vereist geen externe st_gsheets_connection module!)
+conn = st.connection("sheets", type="sheets")
 
 def load_data():
     try:
@@ -89,6 +88,7 @@ def save_data(data):
         })
     df_opstelling = pd.DataFrame(opstelling_rijen) if opstelling_rijen else pd.DataFrame(columns=["datum", "posities", "formatie"])
     
+    # Update de sheets via de ingebouwde component
     conn.update(worksheet="spelers", data=df_spelers)
     conn.update(worksheet="trainingen", data=df_trainingen)
     conn.update(worksheet="opstelling", data=df_opstelling)
@@ -234,7 +234,7 @@ elif st.session_state.page == "aanwezigheid":
         for sessie in echte_wedstrijden.values():
             if naam in sessie.get("blessure",[]): blessure+=1
             elif naam in sessie.get("afwezig",[]): afwezig+=1
-            else: GridView_Aanwezig=1; aanwezig+=1
+            else: aanwezig+=1
         return aanwezig, afwezig, blessure
 
     r1c1, r1c2 = st.columns(2)
@@ -280,20 +280,14 @@ else:
         st.rerun()
         
     datum_key = str(st.session_state.opstelling_datum)
-    
-    # Haal de huidige opstelling op van deze datum of start leeg
     huidige_opstelling = data["opstelling"].get(datum_key, {"posities": {}, "formatie": "4-3-3"})
     
-    # Formatie kiezer
     formaties = ["4-3-3", "4-4-2", "3-5-2", "5-3-2", "4-2-3-1"]
     default_idx = formaties.index(huidige_opstelling.get("formatie", "4-3-3")) if huidige_opstelling.get("formatie", "4-3-3") in formaties else 0
     gekozen_formatie = st.selectbox("Formatie", formaties, index=default_idx)
     
-    # ─── VEILIGE EN OFFICIËLE COMMUNICATIEBRUG VIA COMPONENT STATE ────────────────
-    # We vangen de data op die JavaScript via window.parent.postMessage stuurt
     import streamlit.components.v1 as components
     
-    # Maak verborgen velden aan via st.session_state om de data vast te houden
     with st.expander("💾 Klik hier om de huidige opstelling definitief te bewaren", expanded=True):
         if st.button("💾 Sla huidige veldopstelling op in Google Sheets", type="primary"):
             if st.session_state.opst_posities:
@@ -307,7 +301,6 @@ else:
             else:
                 st.warning("Versleep eerst een aantal spelers op het veld voordat je opslaat.")
 
-    # HTML/JS Tactiekveld genereren
     opgeslagen_posities_json = json.dumps(huidige_opstelling.get("posities", {}))
     spelers_lijst_json = json.dumps(data["spelers"])
     
@@ -367,13 +360,12 @@ else:
     const veld = document.getElementById('veld');
     const bank = document.getElementById('bank');
     
-    // Standaard formatie locaties (X, Y procentueel)
     const formatieTemplates = {{
         "4-3-3": [
-            {{x:50, y:90}}, // K
-            {{x:15, y:70}}, {{x:38, y:73}}, {{x:62, y:73}}, {{x:85, y:70}}, // V
-            {{x:30, y:50}}, {{x:50, y:55}}, {{x:70, y:50}}, // M
-            {{x:20, y:25}}, {{x:50, y:20}}, {{x:80, y:25}}  // A
+            {{x:50, y:90}},
+            {{x:15, y:70}}, {{x:38, y:73}}, {{x:62, y:73}}, {{x:85, y:70}},
+            {{x:30, y:50}}, {{x:50, y:55}}, {{x:70, y:50}},
+            {{x:20, y:25}}, {{x:50, y:20}}, {{x:80, y:25}}
         ],
         "4-4-2": [
             {{x:50, y:90}},
@@ -406,7 +398,6 @@ else:
     let actieveSleepNode = null;
 
     function stuurDataNaarStreamlit() {{
-        // STABIELE OPLOSSING: We sturen de data via postMessage naar de Streamlit kluis
         window.parent.postMessage({{
             type: "streamlit:setComponentValue",
             value: positiesInGebruik
@@ -527,15 +518,11 @@ else:
     </html>
     """
     
-    # Render het tactiekveld veilig via een custom iframe component
-    # De data die door window.parent.postMessage wordt verstuurd, wordt nu AUTOMATISCH opgevangen in 'brug_data'
     brug_data = components.html(veld_html, height=580, scrolling=False)
     
-    # Als de gebruiker sleept op het veld, schrijven we dit direct geruisloos weg naar session_state
     if brug_data is not None:
         st.session_state.opst_posities = brug_data
 
-    # Toon opgeslagen opstellingen archief
     if alle_opst_keys:
         st.markdown("---")
         st.markdown("### 📚 Opgeslagen opstellingen in Google Sheets")
