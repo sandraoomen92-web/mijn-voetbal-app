@@ -4,6 +4,11 @@
       "naam": "test1",
       "positie": "Keeper",
       "nummer": 1
+    },
+    {
+      "naam": "test2",
+      "positie": "Verdediger",
+      "nummer": 2
     }
   ],
   "trainingen": {},
