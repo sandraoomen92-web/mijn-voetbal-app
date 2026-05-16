@@ -11,8 +11,8 @@ st.set_page_config(page_title="⚽ BV O19-1 Dashboard", page_icon="⚽", layout=
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def load_data():
-    try:
-        # Haal de data op uit de 3 verschillende tabbladen (ttl=0 zorgt dat de data altijd live is)
+      try:
+        # Haal de data op uit de 3 verschillende tabbladen
         df_spelers = conn.read(worksheet="spelers", ttl=0)
         df_trainingen = conn.read(worksheet="trainingen", ttl=0)
         df_opstelling = conn.read(worksheet="opstelling", ttl=0)
@@ -21,7 +21,7 @@ def load_data():
         data = {"spelers": [], "trainingen": {}, "opstelling": {}}
         
         # 1. Spelers inladen
-        if not df_spelers.empty:
+        if df_spelers is not None and not df_spelers.empty:
             for _, row in df_spelers.iterrows():
                 if pd.notna(row['naam']):
                     data["spelers"].append({
@@ -31,7 +31,7 @@ def load_data():
                     })
                     
         # 2. Trainingen/Aanwezigheid inladen
-        if not df_trainingen.empty:
+        if df_trainingen is not None and not df_trainingen.empty:
             for _, row in df_trainingen.iterrows():
                 if pd.notna(row['datum']):
                     d_key = str(row['datum'])
@@ -39,12 +39,11 @@ def load_data():
                         "afwezig": json.loads(row['afwezig']) if pd.notna(row['afwezig']) else [],
                         "blessure": json.loads(row['blessure']) if pd.notna(row['blessure']) else []
                     }
-                    # Als er een notitie in Google Sheets staat, laden we die ook netjes in
                     if 'notitie' in df_trainingen.columns and pd.notna(row['notitie']) and str(row['notitie']).strip():
                         data["trainingen"][f"{d_key}_notitie"] = str(row['notitie'])
                     
         # 3. Opstellingen inladen
-        if not df_opstelling.empty:
+        if df_opstelling is not None and not df_opstelling.empty:
             for _, row in df_opstelling.iterrows():
                 if pd.notna(row['datum']):
                     d_key = str(row['datum'])
@@ -52,11 +51,18 @@ def load_data():
                         "posities": json.loads(row['posities']) if pd.notna(row['posities']) else {},
                         "formatie": str(row['formatie']) if pd.notna(row['formatie']) else ""
                     }
+
+        # 🔥 EXTRA VEILIGHEID: Als er nog GEEN spelers zijn (lege Google Sheet),
+        # dan stoppen we er tijdelijk één test-speler in om de JavaScript crash te voorkomen!
+        if not data["spelers"]:
+            data["spelers"].append({"naam": "Eerste Speler (Test)", "positie": "Keeper", "nummer": 1})
+
         return data
         
     except Exception as e:
-        # Als de sheet nog leeg is (eerste keer), starten we met een lege basis
-        return {"spelers": [], "trainingen": {}, "opstelling": {}}
+        # Als er écht iets misgaat, zorgen we ook hier voor een veilige basis met 1 speler
+        return {"spelers": [{"naam": "Eerste Speler (Test)", "positie": "Keeper", "nummer": 1}], "trainingen": {}, "opstelling": {}}
+   }
 
 def save_data(data):
     # 1. Spelers omzetten naar een tabel voor Google Sheets
