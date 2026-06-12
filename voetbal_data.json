@@ -9,6 +9,11 @@
       "naam": "test2",
       "positie": "Verdediger",
       "nummer": 2
+    },
+    {
+      "naam": "verdediger 2",
+      "positie": "Verdediger",
+      "nummer": 3
     }
   ],
   "trainingen": {},
